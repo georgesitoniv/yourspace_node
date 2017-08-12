@@ -1,0 +1,48 @@
+user
+    email
+    pass
+    profile_image
+
+friends
+    userid
+        friendids
+
+user_messages
+    message_id
+
+Post
+    user
+    Post Content
+    Likes
+
+Comments
+    parent id
+    author
+    comment
+    likes
+
+
+messages   
+    id
+    sender
+    message
+    timestamp
+
+chat members
+    user
+
+
+views
+    Home
+        Log In
+        Sign Up
+    Dashboard
+        -Active Chats
+        -Friends
+        -Timeline
+        -Profile
+    User List
+        users
+    Chat
+        chat members
+        messages
