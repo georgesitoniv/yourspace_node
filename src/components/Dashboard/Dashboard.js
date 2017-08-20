@@ -3,15 +3,16 @@ import * as firebase from 'firebase';
 import { Layout, Button, notification } from 'antd';
 
 import DashboardMenu from './DashboardMenu';
-import ChatContainer from './ChatContainer';
+import ConversationContainer from './Conversation/ConversationContainer';
 import FriendList from './FriendList';
+import { notifyUser } from '../_utils/utils';
 
 const { Header, Content } = Layout;
 
 const signOut = (message, description) => {
   firebase.auth().signOut()
     .then(() => {  
-      notification.open({ message, description})
+      notifyUser(message, description);
     });
 }
 
@@ -34,7 +35,7 @@ class Dashboard extends React.Component{
   getTabContent = () =>{
     switch(this.state.currentTab){
       case 'chats':
-        return <ChatContainer/>;
+        return <ConversationContainer/>;
       case 'friends':
         return <FriendList/>;
       case 'users':

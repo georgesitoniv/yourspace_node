@@ -5,12 +5,11 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 module.exports = {
   devtool: 'inline-source-map',
   devServer: {
-    historyApiFallback: true,
-    contentBase: './'
+    contentBase: './',
+    disableHostCheck: true,
+    historyApiFallback: true
   },
-  entry: {
-    app: './src/index.js'
-  },
+  entry: ['./src/index.js'],
   module: {
     rules: [
       {

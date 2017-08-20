@@ -3,8 +3,8 @@ import React from 'react';
 import * as firebase from 'firebase';
 import { Layout, Table, Input, Button } from 'antd';
 
-import Chat from './Chat';
-import ChatMembersModal from './ChatMembersModal';
+import Conversation from './Conversation';
+import ConversationList from './ConversationList';
 
 const { Sider, Content, Footer } = Layout;
 const { TextArea } = Input;
@@ -25,31 +25,12 @@ const getChatList = () => {
   });
 }
 
-class ChatContainer extends React.Component{
+class ConversationContainer extends React.Component{
   constructor(props){
     super(props);
-    this.state = { users: [], memberModalVisible: false};
+    this.state = { users: [] };
   }
 
-  showModal = () => {
-    this.setState({
-      memberModalVisible: true,
-    });
-  }
-  
-  handleOk = (e) => {
-    console.log(e);
-    this.setState({
-      memberModalVisible: false,
-    });
-  }
-
-  handleCancel = (e) => {
-    console.log(e);
-    this.setState({
-      memberModalVisible: false,
-    });
-  }
   componentWillMount(){
     getChatList()
       .then(result => {
@@ -69,20 +50,13 @@ class ChatContainer extends React.Component{
       <div>
         <Layout className="chat-container">
           <Sider className="bg-white sidebar-chat">
-            <Table columns={columns} dataSource={this.state.users}/>
-            <Button onClick={this.showModal}>
-              New Chat
-            </Button>
+            <ConversationList/>
           </Sider>
-          <Chat/>
-          <ChatMembersModal 
-            visible={this.state.memberModalVisible} 
-            handleCancel={this.handleCancel}
-            handleOk={this.handleOk}/>
+          <Conversation/>
         </Layout>
       </div>
     );
   }
 }
 
-export default ChatContainer;
+export default ConversationContainer;

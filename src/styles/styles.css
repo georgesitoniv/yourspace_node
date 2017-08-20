@@ -7,6 +7,11 @@ h1, h2, h3, h4, h5, h6, p{
   margin: 0 0px 8px 0;
 }
 
+.conversation-instance{
+  margin: 5px;
+  cursor: pointer;
+}
+
 .chat-area{
   padding: 25px;
   overflow-y: scroll;
@@ -15,6 +20,10 @@ h1, h2, h3, h4, h5, h6, p{
 
 .chat-container{
   height: 92vh;
+}
+
+.chat-header{
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .chat-instance{
@@ -26,12 +35,21 @@ h1, h2, h3, h4, h5, h6, p{
   background: white !important;
 }
 
+.margin-5{
+  margin: 5px;
+}
+
+.messages-area{
+  overflow-y: scroll;
+  max-height: 100vh;
+}
+
 .fullscreen{
   height: 100vh;
 }
 
 .sidebar-chat{
-  border-right: 2px solid rgba(0, 0, 0, 0.1) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.1) !important;
 }
 
 /*Material Colors  */

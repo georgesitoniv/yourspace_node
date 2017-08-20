@@ -3,6 +3,9 @@ import {Field, reduxForm} from 'redux-form';
 import * as firebase from 'firebase';
 import validator from 'validator';
 import {Form, Input, Button, notification} from 'antd';
+import connect from 'react-redux';
+
+import { notifyUser } from '../_utils/utils';
 
 const renderField = ({
     input,
@@ -59,17 +62,11 @@ class LogInForm extends React.Component{
   return new Promise((resolve, reject) => {
     firebase.auth().signInWithEmailAndPassword(values.email, values.password)
       .then((user) => {
-        notification.open({
-          message:'Welcome',
-          description: 'You have successfully logged in.'
-        });
+        notifyUser('Welcome', 'You have successfully logged in.');
         resolve();
       })
       .catch(err => {
-        notification.open({
-          message:'Ooops',
-          description: handleLogInError(err.code)
-        });
+        notifyUser('Ooops', handleLogInError(err.code));
         reject(err)
       });
     });
