@@ -44,15 +44,6 @@ export function conversationMeta(state = null, action){
   }
 }
 
-export function isConversationNew(state = true, action){
-  switch(action.type){
-    case SET_CONVERSATION_STATE:
-      return action.payload;
-    default:
-      return state;
-  }
-}
-
 export function userConversations(state = {}, action){
   switch(action.type){
     case FETCH_USER_CONVERSATIONS:

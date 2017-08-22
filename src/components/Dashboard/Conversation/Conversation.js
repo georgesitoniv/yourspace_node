@@ -3,7 +3,8 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { sendMessage, sendNewMessage } from '../../../actions';
 import { Layout, Input, Button, Card } from 'antd';
-import fbUtils from '../../../firebase/utils';
+import fireUtils from '../../../firebase/utils';
+import moment from 'moment';
 
 import ConversationMembers from './ConversationMembers';
 import ConversationMessages from './ConversationMessages';
@@ -31,7 +32,7 @@ class Conversation extends React.Component{
   handleSendCliked = () => {
     const { messageContent } = this.state;
     if(this.isMessageValid()){
-      fbUtils.fetchAuthenticatedUser()
+      fireUtils.fetchAuthenticatedUser()
         .then(user => {
           const message = {
             messageContent: messageContent,
@@ -44,14 +45,12 @@ class Conversation extends React.Component{
   }
 
   handleSendMessage = (message, user) => {
-    const { 
-      currentConversation, conversationMembers, sendMessage, sendNewMessage, isConversationNew 
-    } = this.props;
+    const { currentConversation, conversationMembers, sendMessage, sendNewMessage } = this.props;
     const members = { ...conversationMembers, [user.key]: user};
-    if(isConversationNew){
-      sendNewMessage(currentConversation, message, members);
+    if(currentConversation.isNew){
+      sendNewMessage(currentConversation.key, message, members);
     } else {
-      sendMessage(currentConversation, message, members);
+      sendMessage(currentConversation.key, message, members);
     }
     this.setState({messageContent: ''});
   }
@@ -92,8 +91,8 @@ class Conversation extends React.Component{
   }
 }
 
-const mapStateToProps = ({conversationMembers, currentConversation, isConversationNew }) => {
-   return { conversationMembers, currentConversation, isConversationNew } 
+const mapStateToProps = ({conversationMembers, currentConversation }) => {
+   return { conversationMembers, currentConversation } 
   };
 
 export default connect(mapStateToProps, {sendMessage, sendNewMessage})(Conversation);

@@ -12,15 +12,15 @@ class ConversationMessages extends React.Component{
 
   componentWillUpdate(nextProps){
     const { currentConversation, limit } = this.props;
-    if(currentConversation != nextProps.currentConversation || limit != nextProps.limit){
-      nextProps.stopConversationListener(nextProps.currentConversation);
+    if(currentConversation.key != nextProps.currentConversation.key || limit != nextProps.limit){
+      nextProps.stopConversationListener(nextProps.currentConversation.key);
       this.listenToConversationMessages(nextProps);
     }
   }
 
   listenToConversationMessages = (props) => {
     const { currentConversation, limit, listenToConversation } = props;
-    listenToConversation(currentConversation, limit);
+    listenToConversation(currentConversation.key, limit);
   }
 
   renderMessages = () => {
@@ -32,7 +32,7 @@ class ConversationMessages extends React.Component{
           <div key={message.key}  className="chat-instance">
             <Card noHovering={true}>
               <div className="text-right">
-                <i>{moment(message.timestamp).startOf('day').fromNow()}</i>
+                <i>{moment(message.timestamp).startOf('minute').fromNow()}</i>
               </div>
               <p>{message.sender.email}: {message.messageContent}</p>
             </Card>

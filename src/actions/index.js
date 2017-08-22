@@ -1,5 +1,6 @@
 import * as firebase from 'firebase';
-import fbUtils from '../firebase/utils';
+import fireUtils from '../firebase/utils';
+import fireMessenger from '../firebase/messenger';
 
 export const FETCH_AUTHENTICATED_USER = 'FETCH_AUTHENTICATED_USER';
 export const FETCH_CONVERSATION = 'FETCH_CONVERSATION';
@@ -14,17 +15,18 @@ export const SIGN_OUT_WITH_EMAIL = 'SIGN_OUT_WITH_EMAIL';
 
 export function createConversation(){
   return dispatch => {
-    const conversationKey = fbUtils.createConversation();
+    const conversationKey = fireUtils.createConversation();
     dispatch({
       type: SET_CURRENT_CONVERSATION,
       payload: conversationKey
-    })
+    });
+    dispatch(setCurrentConversationMembers({}));
   };
 }
 
 export function fetchConversation(conversationKey, limit){
   return dispatch => {
-    fbUtils.fetchConversation(conversationKey, limit)
+    fireUtils.fetchConversation(conversationKey, limit)
       .then(conversation => {
         dispatch({
           type: FETCH_CONVERSATION,
@@ -36,7 +38,7 @@ export function fetchConversation(conversationKey, limit){
 
 export function fetchConversationMembers(conversationKey){
   return dispatch => {
-    fbUtils.fetchConversationMembers(conversationKey)
+    fireUtils.fetchConversationMembers(conversationKey)
       .then(conversationMembers => {
         dispatch({
           type: SET_CONVERSATION_MEMBERS,
@@ -46,36 +48,10 @@ export function fetchConversationMembers(conversationKey){
   } 
 }
 
-export function fetchConversationMeta(conversationKey){
-  return dispatch => {
-    fbUtils.fetchConversationMeta().then(conversationMeta => {
-      dispatch({
-        type: FETCH_CONVERSATION_META,
-        payload: conversationMeta
-      });
-    });
-  }
-}
-
-export function fetchUserConversations(userKey, limit){
-  return dispatch => {
-    fbUtils.fetchUserConversationsKeys(userKey)
-      .then(conversationKeys => {
-        return fbUtils.fetchUserConversations(conversationKeys, limit);
-      })
-      .then(conversations => {
-        dispatch({
-          type: FETCH_USER_CONVERSATIONS,
-          payload: conversations
-        });
-      });
-  };
-}
-
 export function fetchAuthenticatedUser(){
   return (dispatch, getState) => {
     const { authenticatedUser } = getState(); 
-    fbUtils.fetchAuthenticatedUser()
+    fireUtils.fetchAuthenticatedUser()
       .then(user => {
         dispatch({
 
@@ -88,10 +64,10 @@ export function listenToConversation(conversationKey, limit){
   return dispatch => {
     const ref = firebase.database().ref('conversations/' + conversationKey).limitToLast(limit);
     ref.on('value', snap => {
-      if(fbUtils.isSnapNotNull(snap)){
+      if(fireUtils.isSnapNotNull(snap)){
         dispatch({
           type: FETCH_CONVERSATION,
-          payload: fbUtils.includeKeyAsProperty(snap.val())
+          payload: fireUtils.includeKeyAsProperty(snap.val())
         })
       }
     });
@@ -102,10 +78,10 @@ export function listenToUserConversations(userKey, limit){
   return dispatch => {
     const ref = firebase.database().ref('user_conversations/' + userKey);
     ref.limitToLast(limit).on('value', snap => {
-      if(fbUtils.isSnapNotNull(snap)){
+      if(fireUtils.isSnapNotNull(snap)){
         dispatch({
           type: FETCH_USER_CONVERSATIONS,
-          payload: fbUtils.includeKeyAsProperty(snap.val())
+          payload: fireUtils.includeKeyAsProperty(snap.val())
         })
       }
     });
@@ -113,28 +89,20 @@ export function listenToUserConversations(userKey, limit){
 }
 
 export function sendMessage(conversationKey, message, members){
-  const updates = buildUpdatesForNewMessage(conversationKey, message, members);
+  const messenger = new fireMessenger(conversationKey, message, members);
   return dispatch => {
-    firebase.database().ref().update(updates).then(() => {
-      dispatch(setIsConversationNew(false));
+    messenger.sendNewMessage().then(() => {
+      dispatch(setCurrentConversation(messenger.getConversationMeta()));
     });
   }
 }
 
 export function sendNewMessage(conversationKey, message, members){
-  const updates = builUpdatesForNewConversation(conversationKey, message, members);
+  const messenger = new fireMessenger(conversationKey, message, members);
   return dispatch => {
-    firebase.database().ref().update(updates).then(() => {
-      dispatch(fetchConversationMembers(conversationKey));
-      dispatch(setIsConversationNew(false))
+    messenger.sendMessageForNewConversation().then(() => {
+      dispatch(setCurrentConversation(messenger.getConversationMeta()));
     });
-  }
-}
-
-export function setIsConversationNew(state){
-  return {
-    type: SET_CONVERSATION_STATE,
-    payload: state
   }
 }
 
@@ -145,10 +113,10 @@ export function setCurrentConversationMembers(conversationMembers){
   }
 }
 
-export function setCurrentConversation(conversationKey){
+export function setCurrentConversation(conversation){
   return {
     type: SET_CURRENT_CONVERSATION,
-    payload: conversationKey
+    payload: conversation
   }
 }
 
@@ -168,41 +136,6 @@ export function stopConversationListener(conversationKey){
   }
 }
 
-function builUpdatesForNewConversation(conversationKey, message, members){
-  const messageMeta = fbUtils.buildNewConversationMeta(members, message);
-  const conversationMetaUpdate = fbUtils.buildNewConversationMetaUpdate(
-    conversationKey, messageMeta
-  );
-  const userConversationsUpdate = fbUtils.buildUsersNewConversationUpdate(
-    conversationKey, members, message
-  );
-  const conversationMembersUpdate = fbUtils.buildConversationMembersUpdate(
-    conversationKey, members
-  );
-  const messageUpdate = fbUtils.buildNewMessageUpdate(conversationKey, message);
-  const updates = _.assign({}, 
-    conversationMetaUpdate, 
-    userConversationsUpdate, 
-    conversationMembersUpdate,
-    messageUpdate
-  );
-  return updates;
-}
-
-function buildUpdatesForNewMessage(conversationKey, message, members){
-  const messageUpdate = fbUtils.buildNewMessageUpdate(conversationKey, message);
-  const conversationMeta = fbUtils.buildConversationMetaUpdate(conversationKey, message);
-  const userConversationsUpdate = fbUtils.buildUsersConversationUpdate(
-    conversationKey, members, message
-  );
-  const updates = _.assignIn({},
-    conversationMeta,
-    messageUpdate, 
-    userConversationsUpdate
-  );
-  return updates;
-}
-
 // export function removeAuthenticatedUser(user){
 //   return {
 //     type: SET_AUTHENTICATED_USER,
@@ -212,7 +145,7 @@ function buildUpdatesForNewMessage(conversationKey, message, members){
 
 // export function signInWithEmail(credentials, okayHandler, errorHandler){
 //   return dispatch => {
-//     fbUtils.signInWithEmail(credentials.email, credentials.password)
+//     fireUtils.signInWithEmail(credentials.email, credentials.password)
 //       .then(user => {
 //         okayHandler();
 //         dispatch({

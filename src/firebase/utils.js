@@ -10,60 +10,9 @@ const createBooleanObject = (items) => {
 };
 
 module.exports = {
-  buildConversationMembersUpdate(conversationKey, members){
-    return {['conversation_members/' + conversationKey] : members};
-  },
-  buildConversationMetaUpdate(conversationKey, message){
-    return {
-      ['conversations_meta/' + conversationKey + '/messageContent']: message.messageContent,
-      ['conversations_meta/' + conversationKey + '/sender']: message.sender,
-      ['conversations_meta/' + conversationKey + '/timestamp']: message.timestamp,
-    }
-  },
-  buildNewConversationMeta(members, message, user = null){
-    const messageMeta = {...message};
-    messageMeta.title = _.map(members, member => { 
-      if(user){
-        if(member.key != user.key){
-          return member.email;
-        }
-      } else {
-        return member.email;
-      }
-    }).join();
-    return messageMeta;
-  },
-  buildNewConversationMetaUpdate(conversationKey, messageMeta){
-    return {
-      ['conversations_meta/' + conversationKey]: messageMeta
-    }
-  },
-  buildNewMessageUpdate(conversationKey, message){
-    const conversationPath = 'conversations/' + conversationKey;
-    const messageKey = firebase.database().ref(conversationPath).push().key;
-    return { [conversationPath + '/' + messageKey]: message };
-  },
-  buildUsersConversationUpdate(conversationKey, members, message){
-    let updates = {};
-    const userKeys = _.map(members, 'key');
-    _.map(userKeys, userKey => {
-      updates['user_conversations/' + userKey + '/' + conversationKey + '/messageContent'] = message.messageContent;
-      updates['user_conversations/' + userKey + '/' + conversationKey + '/sender'] = message.sender;
-      updates['user_conversations/' + userKey + '/' + conversationKey + '/timestamp'] = message.timestamp;
-    });
-    return updates;
-  },
-  buildUsersNewConversationUpdate(conversationKey, members, message){
-    let updates = {};
-    const userKeys = _.map(members, 'key');
-    _.map(userKeys, userKey => {
-      const messageMeta = this.buildNewConversationMeta(members, message, members[userKey]);
-      updates['user_conversations/' + userKey + '/' + conversationKey] = messageMeta
-    });
-    return updates;
-  },
   createConversation(){
-    return firebase.database().ref('conversations').push().key;
+    const key = firebase.database().ref('conversations').push().key;
+    return { key, isNew: true};
   },
   fetchAuthenticatedUser(){
     return new Promise((resolve, reject) => {
@@ -97,7 +46,9 @@ module.exports = {
     return new Promise((resolve, reject) => {
       conversationMembersRef.once('value').then(snap => {
         if(this.isSnapNotNull(snap)){
-          resolve(this.includeKeyAsProperty(snap.val()));
+          const members = this.includeKeyAsProperty(snap.val());
+          delete members.memberEmails;
+          resolve(members);
         }
         resolve({});
       }).catch(err => reject(err));
@@ -125,54 +76,6 @@ module.exports = {
         resolve(null);
       }).catch((err) => reject(err));
     });
-  },
-  fetchUserConversations(conversationKeys, limit){
-    return new Promise((resolve, reject) => {
-      firebase.database().ref('conversations_meta').once('value')
-        .then( snap => {
-          if(this.isSnapNotNull(snap)){
-            const conversations = _.mapKeys(snap.val(), (key, index) => {
-              if(_.includes(conversationKeys, key)){
-                return snap.val()[key];
-              }
-            });
-            resolve(conversations);
-          }
-          resolve({});
-        })
-        .catch(err => reject(err));
-    });
-  },
-  fetchUserConversationsKeys(userKey){
-    const ref = firebase.database().ref('user_conversations/' + userKey);
-    return new Promise((resolve, reject) => {
-      ref.once('value').then(snap => {
-        if(this.isSnapNotNull(snap)){
-          resolve(snap.val());
-        }
-        resolve(null);
-      })
-      .catch(err => reject(err));
-    });
-  },
-  setConversationMembers(conversationKey, memberKeys){
-    const conversationRef = firebase.database()
-      .ref('conversation_members/' + conversationKey);
-    return conversationRef.set(createBooleanObject(memberKeys));
-  },
-  sendMessage(message){
-
-  },
-  updateUserConversations(conversationKey, users){
-    let updates = {};
-    const conversations = createBooleanObject(users);
-    _.map(users, user => {
-      updates['user_conversations/' + user] = {[user]: conversations[user]};
-    });
-    return new Promise((resolve, reject) => {
-      console.log(updates);
-      resolve();
-    })
   },
   includeKeyAsProperty(object){
     Object.keys(object).map((key, index) => {

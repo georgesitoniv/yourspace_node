@@ -4,7 +4,6 @@ import {
   conversation,
   currentConversation, 
   conversationMembers, 
-  isConversationNew,
   userConversations
 } from './reducerUserConversations';
 
@@ -12,7 +11,6 @@ const rootReducer = combineReducers({
   conversation,
   currentConversation,
   conversationMembers,
-  isConversationNew,
   userConversations,
   form: formReducer,
 });

@@ -7,11 +7,6 @@ h1, h2, h3, h4, h5, h6, p{
   margin: 0 0px 8px 0;
 }
 
-.conversation-instance{
-  margin: 5px;
-  cursor: pointer;
-}
-
 .chat-area{
   padding: 25px;
   overflow-y: scroll;
@@ -42,6 +37,10 @@ h1, h2, h3, h4, h5, h6, p{
 .messages-area{
   overflow-y: scroll;
   max-height: 100vh;
+}
+
+.message-meta-instance{
+  cursor: pointer;
 }
 
 .fullscreen{

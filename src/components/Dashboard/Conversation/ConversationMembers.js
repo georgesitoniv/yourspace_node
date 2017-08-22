@@ -6,7 +6,7 @@ import {
   setCurrentConversationMembers 
 } from '../../../actions';
 import { Modal, Tag, Input, Tooltip, Button, AutoComplete } from 'antd';
-import fbUtils from '../../../firebase/utils';
+import fireUtils from '../../../firebase/utils';
 
 const Option = AutoComplete.Option;
 
@@ -33,15 +33,15 @@ class ChatMembers extends React.Component{
   }
 
   componentWillUpdate(nextProps){
-    if(this.props.currentConversation != nextProps.currentConversation){
+    if(this.props.currentConversation.key != nextProps.currentConversation.key){
       this.fetchConversationMembers(nextProps);
     }
   }
 
   fetchConversationMembers = (props) => {
-    const { currentConversation, isConversationNew, fetchConversationMembers } = props;
-    if(!isConversationNew){
-      fetchConversationMembers(currentConversation);
+    const { currentConversation, fetchConversationMembers } = props;
+    if(!currentConversation.isNew){
+      fetchConversationMembers(currentConversation.key);
     }
   }
 
@@ -65,7 +65,7 @@ class ChatMembers extends React.Component{
   }
 
   handleSearch = (value) => {
-    fbUtils.fetchUsers(value)
+    fireUtils.fetchUsers(value)
       .then((users) => {
         this.setState({dataSource: _.map(users)});
       })
@@ -108,31 +108,32 @@ class ChatMembers extends React.Component{
     const members =  this.props.conversationMembers;
     if(Object.keys(members).length > 0){
       return Object.keys(members).map((key, index) => {
-        const isLengthLong = members[key].email.length > 20;
+        const member = members[key];
+        const isLengthLong = member.email.length > 20;
         const tagElement = (
-          <Tag key={key} closable={this.props.isConversationNew} afterClose={() => this.handleClose(key)}>
-            {isLengthLong ? `${members[key].email.slice(0, 15)}...`: members[key].email}
+          <Tag key={key} closable={this.props.currentConversation.isNew} afterClose={() => this.handleClose(key)}>
+            {isLengthLong ? `${member.email.slice(0, 15)}...`: member.email}
           </Tag>
         );
-        return isLengthLong ? <Tooltip title={members[key].email} key={key}>{tagElement}</Tooltip> : tagElement;
+        return isLengthLong ? <Tooltip title={member.email} key={key}>{tagElement}</Tooltip> : tagElement;
       });
     }
   }
 
   render(){
-    const { isConversationNew } = this.props;
+    const { currentConversation } = this.props;
     return(
       <div>
         {this.renderMembers()}
-        {isConversationNew && this.renderInput()}
-        {isConversationNew && this.renderInputButton()}
+        {currentConversation.isNew && this.renderInput()}
+        {currentConversation.isNew && this.renderInputButton()}
       </div>
     );  
   }
 }
 
-const mapStateToProps = ({currentConversation, conversationMembers, isConversationNew}) => {
-  return {currentConversation, conversationMembers, isConversationNew};
+const mapStateToProps = ({currentConversation, conversationMembers}) => {
+  return {currentConversation, conversationMembers};
 }
 
 export default connect(mapStateToProps, 
