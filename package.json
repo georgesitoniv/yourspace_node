@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "antd": "^2.12.4",
+    "babel-polyfill": "^6.26.0",
     "express": "^4.15.3",
     "firebase": "^4.2.0",
     "lodash": "^4.17.4",
@@ -43,7 +44,7 @@
   "scripts": {
     "dev": "NODE_ENV=development nodemon ./src/server/server.js",
     "dev-server": "NODE_ENV=development webpack-dev-server",
-    "test": "NODE_ENV=test mocha --recursive test/ --compilers js:babel-core/register",
+    "test": "NODE_ENV=test mocha --recursive test/ --compilers js:babel-core/register --require babel-polyfill",
     "test-watch": "nodemon --exec \"npm run test\""
   }
 }

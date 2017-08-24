@@ -1,55 +1,53 @@
 require('./index.test');
 const _ = require('lodash');
 const expect = require('expect');
-const fbUtils = require('../../src/firebase/utils.js');
+const fireUtils = require('../../src/firebase/utils.js');
+const fireMessenger = require('../../src/firebase/messenger');
+const {conversationKeys, message, members} = require('./index.test');
 
-// describe('Fetch Data', () => {
-//   it('should fetch users with key', (done) => {
-//     fbUtils.fetchUsers('gehan_siton@yahoo.com')
-//       .then((users) => {
-//         const user = users['1eMCmRqlMtTDn8wMoQDENgl9nsj1'];
-//         expect(user).toIncludeKey('key');
-//         expect(user).toInclude({
-//           email: 'gehan_siton@yahoo.com', 
-//           key: '1eMCmRqlMtTDn8wMoQDENgl9nsj1'
-//         });
-//         done();
-//       }).catch((err) => done(err));
-//   });
-//   // it('should fetch message members', (done) => {
-//   //   fbUtils.fetchMessageMembers('123456789')
-//   //     .then((members) => {
-//   //       console.log(members[1], typeof members);
-//   //       done();
-//   //     }).catch(err => done(err));
-//   // });
-// });
+describe('Fire Utils', () => {
+  it('should create a new conversation', () => {
+    const converation = fireUtils.createConversation();
+    expect(converation).toIncludeKeys(['key', 'isNew'])
+    expect(converation).toInclude({isNew: true});
+  });
+  
+  it('should fetch conversation members', (done) => {
+    fireUtils.fetchConversationMembers(conversationKeys[0]).then(converationMembers => {
+      expect(converationMembers).toInclude(members);
+      done();
+    }).catch(err => done(err));
+  });
 
-// describe('Set Data', () => {
-//   // it('should set message members', (done) => {
-//   //   fbUtils.setMessageMembers('123456789', ['1', '2'])
-//   //     .then(() => {
-//   //       done();
-//   //     }).catch(err => done(err));
-//   // });
-//   it('should update user conversations', () => {
-//     sendNewMessage('12313132', {
-//       messageContent: 'hi',
-//       sender: '231312',
-//       timestamp: new Date().getTime()
-//     }, ['123123123','4564563']);
-//   });
-// });
+  it('should fetch users', (done) => {
+    fireUtils.fetchUsers('test').then(users => {
+      expect(users).toInclude(members['1']);
+      done();
+    }).catch(err => done(err));
+  });
 
-// function sendNewMessage(conversationId, message, memberIds){
-//   const conversationMembersUpdate = fbUtils.buildConversationMembersUpdate(
-//     conversationId, memberIds
-//   );
-//   const userConversationsUpdate = fbUtils.buildUsersConversationUpdate(
-//     conversationId, memberIds
-//   );
-//   const newMessage = fbUtils.buildNewMessage(conversationId, message);
-//   const updates = _.assignIn({}, conversationMembersUpdate, 
-//     userConversationsUpdate, newMessage);
-//   console.log(updates);
-// }
+  describe('Listen to Conversation Messages', () => {
+    const message = {
+      messageContent: 'listener test',
+      sender: {email: 'new@test.com', key:'1'},
+      timestamp: new Date().getTime()
+    }
+    let conversationMessages = {};
+
+    before('should listen to conversation messages', () => {
+      const callback = messages => {
+        conversationMessages = messages;
+      }
+      fireUtils.startValueListenerWithLimit('conversations/' + conversationKeys[0], 10, callback);
+    });
+  
+    it('should listen to conversation messages', (done) => {
+      const messenger = new fireMessenger(conversationKeys[0], message, members);
+      messenger.sendNewMessage().then(() => {
+        expect(_.map(conversationMessages)).toInclude(message);
+        fireUtils.stopValueListener('conversations/' + conversationKeys[0]);
+        done();
+      }).catch(err => done(err));
+    });
+  });
+});

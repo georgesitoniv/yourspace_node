@@ -9,6 +9,17 @@ const createBooleanObject = (items) => {
   return booleanObject;
 };
 
+const isValidObject = (object) => {
+  if(object){
+    if(typeof object == 'object'){
+      if(Object.keys(object).length > 0){
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 module.exports = {
   createConversation(){
     const key = firebase.database().ref('conversations').push().key;
@@ -18,51 +29,25 @@ module.exports = {
     return new Promise((resolve, reject) => {
       firebase.auth().onAuthStateChanged(user => {
         if(user){
-          firebase.database().ref('users/' + user.uid).once('value')
-          .then(snap => {
-            if(this.isSnapNotNull(snap)){
-              resolve({...snap.val(), key: user.uid});
-            }
-          })
-          .catch(err => reject(err));
+          this.fetchData('value', 'users/' + user.uid)
+            .then(authUser => {
+              if(isValidObject(authUser)){
+                resolve({...authUser, key: user.uid});
+              }
+            }).catch(err => reject(err));
         }
       });
     })
   },
-  fetchConversation(conversationKey, limit){
-    const ref = firebase.database().ref('conversations/' + conversationKey).limitToLast(limit);
-    return new Promise((resolve, reject) => {
-      ref.once('value').then(snap => {
-        if(this.isSnapNotNull(snap)){
-          resolve(this.includeKeyAsProperty(conversation));
-        }
-        resolve(null);
-      });
-    });
-  },
   fetchConversationMembers(conversationKey){
-    const conversationMembersRef = firebase.database()
-      .ref('conversation_members/' + conversationKey);
     return new Promise((resolve, reject) => {
-      conversationMembersRef.once('value').then(snap => {
-        if(this.isSnapNotNull(snap)){
-          const members = this.includeKeyAsProperty(snap.val());
-          delete members.memberEmails;
-          resolve(members);
-        }
-        resolve({});
-      }).catch(err => reject(err));
-    });
-  },
-  fetchConversationMeta(conversationKey){
-    const conversationMetaRef = firebase.database().ref('conversation_meta/' + conversationKey);
-    return new Promise((resolve, reject) => {
-      conversationMetaRef.once('value').then(snap => {
-        if(this.isSnapNotNull(snap)){
-          resolve(this.includeKeyAsProperty(snap.val()));
-        }
-        resolve({});
-      }).catch(err => reject(err));
+      this.fetchData('value', 'conversation_members/' + conversationKey)
+        .then(conversationMembers => {
+          if(isValidObject(conversationMembers)){
+            delete conversationMembers.memberEmails;
+          }
+          resolve(this.includeKeyAsProperty(conversationMembers))
+        }).catch(err => reject(err));
     });
   },
   fetchUsers(email){
@@ -70,27 +55,38 @@ module.exports = {
       .startAt(email).endAt(email + '\u{f8ff}');
     return new Promise((resolve, reject) => {
       query.once('value').then(snap => {
-        if(this.isSnapNotNull(snap)){
-          resolve(this.includeKeyAsProperty(snap.val()));
-        }
-        resolve(null);
+        resolve(this.includeKeyAsProperty(snap.val()));
       }).catch((err) => reject(err));
     });
   },
-  includeKeyAsProperty(object){
-    Object.keys(object).map((key, index) => {
-      if(typeof object[key] == 'object'){
-        object[key].key = key;
-      }
+  startValueListenerWithLimit(path, limit, callback){
+    this.startListenerWithLimit('value', path, limit, callback);
+  },
+  stopValueListener(path){
+    this.stopListener('value', path);
+  },
+  fetchData(event, path){
+    return new Promise((resolve, reject) => {
+      firebase.database().ref(path).once(event).then(snap => {
+        resolve(snap.val());
+      }).catch(err => reject(err));
     });
-    return object;
-  }, 
-  isSnapNotNull(snap){
-    if(snap){
-      if(snap.val()){
-        return true;
-      }
+  },
+  startListenerWithLimit(event, path, limit, callback){
+    const ref = firebase.database().ref(path).limitToLast(limit);
+    ref.on(event, snap => callback(snap.val()));
+  },
+  stopListener(event, path){
+    firebase.database().ref(path).off(event);
+  },
+  includeKeyAsProperty(object){
+    if(isValidObject(object)){
+      Object.keys(object).map((key, index) => {
+        if(typeof object[key] == 'object'){
+          object[key].key = key;
+        }
+      });
     }
-    return false;
+    return object;
   }
 };

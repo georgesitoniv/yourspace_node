@@ -10,7 +10,7 @@ module.exports = {
     disableHostCheck: true,
     historyApiFallback: true
   },
-  entry: ['./src/index.js'],
+  entry: ['babel-polyfill', './src/index.js'],
   module: {
     rules: [
       {

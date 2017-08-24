@@ -3,7 +3,7 @@ import fireUtils from '../firebase/utils';
 import fireMessenger from '../firebase/messenger';
 
 export const FETCH_AUTHENTICATED_USER = 'FETCH_AUTHENTICATED_USER';
-export const FETCH_CONVERSATION = 'FETCH_CONVERSATION';
+export const FETCH_CONVERSATION_MESSAGES = 'FETCH_CONVERSATION_MESSAGES';
 export const FETCH_CONVERSATION_META = 'FETCH_CONVERSATION_META'
 export const FETCH_USER_CONVERSATIONS = 'FETCH_USER_CONVERSATIONS';
 export const SET_CONVERSATION_MEMBERS = 'SET_CONVERSATION_MEMBERS';
@@ -21,18 +21,6 @@ export function createConversation(){
       payload: conversationKey
     });
     dispatch(setCurrentConversationMembers({}));
-  };
-}
-
-export function fetchConversation(conversationKey, limit){
-  return dispatch => {
-    fireUtils.fetchConversation(conversationKey, limit)
-      .then(conversation => {
-        dispatch({
-          type: FETCH_CONVERSATION,
-          payload: conversation
-        })
-      });
   };
 }
 
@@ -60,34 +48,6 @@ export function fetchAuthenticatedUser(){
   };
 }
 
-export function listenToConversation(conversationKey, limit){
-  return dispatch => {
-    const ref = firebase.database().ref('conversations/' + conversationKey).limitToLast(limit);
-    ref.on('value', snap => {
-      if(fireUtils.isSnapNotNull(snap)){
-        dispatch({
-          type: FETCH_CONVERSATION,
-          payload: fireUtils.includeKeyAsProperty(snap.val())
-        })
-      }
-    });
-  }
-}
-
-export function listenToUserConversations(userKey, limit){
-  return dispatch => {
-    const ref = firebase.database().ref('user_conversations/' + userKey);
-    ref.limitToLast(limit).on('value', snap => {
-      if(fireUtils.isSnapNotNull(snap)){
-        dispatch({
-          type: FETCH_USER_CONVERSATIONS,
-          payload: fireUtils.includeKeyAsProperty(snap.val())
-        })
-      }
-    });
-  }
-}
-
 export function sendMessage(conversationKey, message, members){
   const messenger = new fireMessenger(conversationKey, message, members);
   return dispatch => {
@@ -106,6 +66,26 @@ export function sendNewMessage(conversationKey, message, members){
   }
 }
 
+export function startConversationMessagesListener(conversationKey, limit){
+  return dispatch => {
+    const callback = messages => dispatch({
+        type: FETCH_CONVERSATION_MESSAGES,
+        payload: fireUtils.includeKeyAsProperty(messsages)
+      });
+    fireUtils.startValueListenerWithLimit('conversations/' + conversationKey, limit, callback);
+  }
+}
+
+export function startUserConversationsListener(userKey, limit){
+  return dispatch => {
+    const callback = conversations => dispatch({
+        type: FETCH_USER_CONVERSATIONS,
+        payload: fireUtils.includeKeyAsProperty(conversations)
+      });
+    fireUtils.startValueListenerWithLimit('user_conversations/' + userKey, limit, callback);
+  }
+}
+
 export function setCurrentConversationMembers(conversationMembers){
   return {
     type: SET_CONVERSATION_MEMBERS,
@@ -120,18 +100,18 @@ export function setCurrentConversation(conversation){
   }
 }
 
-export function stopUserConversationsListener(){
-  firebase.database().ref('user_conversations/' + userKey).off('value');
+export function stopConversationMessagesListener(conversationKey){
+  fireUtils.stopValueListener('conversations/' + conversationKey);
   return{
-    type: FETCH_USER_CONVERSATIONS,
+    type: FETCH_CONVERSATION_MESSAGES,
     payload: {}
   }
 }
 
-export function stopConversationListener(conversationKey){
-  firebase.database().ref('conversations/' + conversationKey).off('value');
+export function stopUserConversationsListener(){
+  fireUtils.stopValueListener('user_conversations/' + userKey);
   return{
-    type: FETCH_CONVERSATION,
+    type: FETCH_USER_CONVERSATIONS,
     payload: {}
   }
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { listenToConversation, stopConversationListener } from '../../../actions';
+import { startConversationMessagesListener, stopConversationMessagesListener } from '../../../actions';
 import { Card } from 'antd';
 import moment from 'moment';
 
@@ -10,24 +10,36 @@ class ConversationMessages extends React.Component{
     this.listenToConversationMessages(this.props);
   }
 
+  componentWillUnmount(){
+    const { currentConversation, stopConversationMessagesListener } = this.props;
+    stopConversationMessagesListener(currentConversation.key);
+  }
+
   componentWillUpdate(nextProps){
-    const { currentConversation, limit } = this.props;
-    if(currentConversation.key != nextProps.currentConversation.key || limit != nextProps.limit){
-      nextProps.stopConversationListener(nextProps.currentConversation.key);
+    if(this.checkIfComponentMustUpdate(this.props, nextProps)){
+      nextProps.stopConversationMessagesListener(nextProps.currentConversation.key);
       this.listenToConversationMessages(nextProps);
     }
   }
 
+  checkIfComponentMustUpdate = (currentProps, nextProps) => {
+    if(currentProps.currentConversation.key != nextProps.currentConversation.key 
+      || currentProps.limit != nextProps.limit){
+        return true;
+      }
+    return false;
+  }
+
   listenToConversationMessages = (props) => {
-    const { currentConversation, limit, listenToConversation } = props;
-    listenToConversation(currentConversation.key, limit);
+    const { currentConversation, limit, startConversationMessagesListener } = props;
+    startConversationMessagesListener(currentConversation.key, limit);
   }
 
   renderMessages = () => {
-    const { conversation } = this.props;
-    if(conversation){
-      return Object.keys(conversation).map((key, index) => {
-        const message = conversation[key];
+    const { conversationMessages } = this.props;
+    if(conversationMessages){
+      return Object.keys(conversationMessages).map((key, index) => {
+        const message = conversationMessages[key];
         return(
           <div key={message.key}  className="chat-instance">
             <Card noHovering={true}>
@@ -51,8 +63,8 @@ class ConversationMessages extends React.Component{
   }
 }
 
-const mapStateToProps = ({conversation}) => { return {conversation}};
+const mapStateToProps = ({conversationMessages}) => { return {conversationMessages}};
 
 export default connect(mapStateToProps, 
-  {listenToConversation, stopConversationListener}
+  {startConversationMessagesListener, stopConversationMessagesListener}
 )(ConversationMessages);

@@ -3,8 +3,8 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { 
   createConversation,
-  listenToUserConversations,
   setCurrentConversation,
+  startUserConversationsListener
 } from '../../../actions';
 import { Button, Card } from 'antd';
 import fireUtils from '../../../firebase/utils';
@@ -14,7 +14,7 @@ class ConversationsList extends React.Component{
     super(props);
     fireUtils.fetchAuthenticatedUser()
       .then(user => {
-        props.listenToUserConversations(user.key, 15);
+        props.startUserConversationsListener(user.key, 15);
       });
   }
 
@@ -63,6 +63,6 @@ const mapStateToProps = ({ userConversations }) => {
 
 export default connect(mapStateToProps, { 
   createConversation,
-  listenToUserConversations,
+  startUserConversationsListener,
   setCurrentConversation
 })(ConversationsList);

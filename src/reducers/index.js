@@ -1,14 +1,14 @@
 import {combineReducers} from 'redux';
 import { reducer as formReducer } from 'redux-form';
 import { 
-  conversation,
+  conversationMessages,
   currentConversation, 
   conversationMembers, 
   userConversations
 } from './reducerUserConversations';
 
 const rootReducer = combineReducers({
-  conversation,
+  conversationMessages,
   currentConversation,
   conversationMembers,
   userConversations,
