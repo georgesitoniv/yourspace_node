@@ -34,6 +34,7 @@ class Conversation extends React.Component{
     if(this.isMessageValid()){
       fireUtils.fetchAuthenticatedUser()
         .then(user => {
+          console.log(user);
           const message = {
             messageContent: messageContent,
             sender: user,

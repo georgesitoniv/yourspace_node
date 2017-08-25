@@ -6,15 +6,10 @@ import DashboardMenu from './DashboardMenu';
 import ConversationContainer from './Conversation/ConversationContainer';
 import FriendList from './FriendList';
 import { notifyUser } from '../_utils/utils';
+import { connect } from 'react-redux';
+import { signOut } from '../../actions';
 
 const { Header, Content } = Layout;
-
-const signOut = (message, description) => {
-  firebase.auth().signOut()
-    .then(() => {  
-      notifyUser(message, description);
-    });
-}
 
 class Dashboard extends React.Component{
   constructor(props){
@@ -24,7 +19,7 @@ class Dashboard extends React.Component{
 
   handleMenuClick = (e) => {
     if(e.key == 'signout'){
-      signOut('Signed Out', 'You have successfully signed out.');
+      this.signOut('Signed Out', 'You have successfully signed out.');
     } else {
       this.setState({
         currentTab: e.key
@@ -45,6 +40,14 @@ class Dashboard extends React.Component{
     }
   }
 
+  signOut = (message, description) => {
+    firebase.auth().signOut()
+      .then(() => {  
+        notifyUser(message, description);
+        this.props.signOut();
+      });
+  }
+  
   render(){
     return(
       <div>
@@ -63,4 +66,4 @@ class Dashboard extends React.Component{
   }
 }
 
-export default Dashboard;
+export default connect(null, {signOut})(Dashboard);

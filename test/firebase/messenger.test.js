@@ -22,7 +22,7 @@ describe('Fire Messenger', () => {
       }).catch(err => done(err));
     });
   
-    it('should a new message to an existing conversation', (done) => {
+    it('should send new message to an existing conversation', (done) => {
       const message = {
         messageContent: 'hey',
         sender: {email: 'new@test.com', key:'2'},

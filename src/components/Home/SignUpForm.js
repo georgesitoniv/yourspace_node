@@ -3,6 +3,7 @@ import { Field, reduxForm } from 'redux-form';
 import validator from 'validator';
 import * as firebase from 'firebase';
 import { Input, Button, FormItem, Form, notification } from 'antd';
+import FireEmailAuthentication from '../../firebase/emailAuthentication';
 
 const validate = (values) => {
   const errors = {};
@@ -59,6 +60,7 @@ const renderField = ({
     </div>
   );
 }
+
 class SignUpForm extends React.Component {
   constructor(props){
     super(props);

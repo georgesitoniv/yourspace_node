@@ -20,26 +20,27 @@ class ConversationsList extends React.Component{
 
   renderConversations(){  
     const { userConversations } = this.props;
-    if(Object.keys(userConversations).length > 0){
-      return _.map(userConversations, messageMeta => {
-        const isTitleLong = messageMeta.title.length > 20;
-        return(
-          <Card 
-            className="message-meta-instance"
-            key={messageMeta.key} 
-            onClick={() => this.props.setCurrentConversation(messageMeta)}>
-            <p>{isTitleLong? `${messageMeta.title.slice(0, 20)}...`:messageMeta.title}</p>
-            <p>{messageMeta.messageContent}</p>
-          </Card> 
-        );
-      });
-    } else {
-      return(
-        <div className="margin-5 text-center">
-          No Messages
-        </div>
-      )
+    if(userConversations){
+      if(Object.keys(userConversations).length > 0){
+        return _.map(userConversations, messageMeta => {
+          const isTitleLong = messageMeta.title.length > 20;
+          return(
+            <Card 
+              className="message-meta-instance"
+              key={messageMeta.key} 
+              onClick={() => this.props.setCurrentConversation(messageMeta)}>
+              <p>{isTitleLong? `${messageMeta.title.slice(0, 20)}...`:messageMeta.title}</p>
+              <p>{messageMeta.messageContent}</p>
+            </Card> 
+          );
+        });
+      } 
     }
+    return(
+      <div className="margin-5 text-center">
+        No Messages
+      </div>
+    );
   }
 
   render(){

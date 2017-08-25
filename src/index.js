@@ -2,7 +2,7 @@ import './styles/styles.css';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux'; 
+import { createStore, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import * as firebase from 'firebase';
 import { LocaleProvider } from 'antd';
@@ -13,7 +13,7 @@ import reducers from './reducers';
 import Routes from './routes';
 
 if(!firebase.apps.length){
-  firebase.initializeApp(config);  
+  firebase.initializeApp(config);
 }
 
 const createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
@@ -29,4 +29,3 @@ const Root = () => {
 }
 
 ReactDOM.render(<Root/>, document.querySelector('#root'));
-

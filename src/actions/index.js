@@ -10,8 +10,8 @@ export const SET_CONVERSATION_MEMBERS = 'SET_CONVERSATION_MEMBERS';
 export const SET_CONVERSATION_STATE = 'SET_CONVERSATION_STATE';
 export const SET_CURRENT_CONVERSATION = 'SET_CURRENT_CONVERSATION';
 
-export const SIGN_IN_WITH_EMAIL = 'SIGN_IN_WITH_EMAIL';
-export const SIGN_OUT_WITH_EMAIL = 'SIGN_OUT_WITH_EMAIL';
+export const USER_SIGN_IN = 'USER_SIGN_IN';
+export const USER_SIGN_OUT = 'USER_SIGN_OUT';
 
 export function createConversation(){
   return dispatch => {
@@ -48,7 +48,27 @@ export function fetchAuthenticatedUser(){
   };
 }
 
-export function sendMessage(conversationKey, message, members){
+export function signInWithCallbacks(FireAuthObject){
+  return dispatch => {
+    FireAuthObject.signInAndRunCallbacks().then(user => {
+      return fireUtils.fetchUsers(user.email);
+    }).then(authUser => {
+      dispatch({
+        type: USER_SIGN_IN,
+        payload: authUser
+      });
+    });
+  };
+}
+
+export function signOut(){
+  return{
+    type: USER_SIGN_OUT,
+    payload: null
+  }
+};
+
+export function sendMessage(conversationKey, message, members){s
   const messenger = new fireMessenger(conversationKey, message, members);
   return dispatch => {
     messenger.sendNewMessage().then(() => {
@@ -70,7 +90,7 @@ export function startConversationMessagesListener(conversationKey, limit){
   return dispatch => {
     const callback = messages => dispatch({
         type: FETCH_CONVERSATION_MESSAGES,
-        payload: fireUtils.includeKeyAsProperty(messsages)
+        payload: fireUtils.includeKeyAsProperty(messages)
       });
     fireUtils.startValueListenerWithLimit('conversations/' + conversationKey, limit, callback);
   }

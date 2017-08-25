@@ -3,7 +3,10 @@ import {Field, reduxForm} from 'redux-form';
 import * as firebase from 'firebase';
 import validator from 'validator';
 import {Form, Input, Button, notification} from 'antd';
-import connect from 'react-redux';
+import {connect} from 'react-redux';
+import { signInWithCallbacks } from '../../actions';
+import FireEmailAuthentication from '../../firebase/emailAuthentication';
+import { emailAuth } from '../../firebase/authUtils';
 
 import { notifyUser } from '../_utils/utils';
 
@@ -53,22 +56,20 @@ const handleLogInError = (errorCode) => {
 }
 
 class LogInForm extends React.Component{
-  constructor(props){
-    super(props);
-    this.onLogIn = this.onLogIn.bind(this);
-  }
-
-  onLogIn(values) {
-  return new Promise((resolve, reject) => {
-    firebase.auth().signInWithEmailAndPassword(values.email, values.password)
-      .then((user) => {
+  onLogIn = (values) => {
+    return new Promise((resolve, reject) => {
+      const successCallback = () => {
         notifyUser('Welcome', 'You have successfully logged in.');
         resolve();
-      })
-      .catch(err => {
-        notifyUser('Ooops', handleLogInError(err.code));
+      }
+      const errorCallback = (err) => {
+        notifyUser('Ooops', emailAuth.handleErrorCodes(err.code));
         reject(err)
-      });
+      };
+      const fireEmailAuth = new FireEmailAuthentication(
+        values.email, values.password, successCallback, errorCallback
+      );
+      this.props.signInWithCallbacks(fireEmailAuth);
     });
   };
 
@@ -101,4 +102,4 @@ class LogInForm extends React.Component{
 export default reduxForm({
   form: 'LogInForm',
   validate
-})(LogInForm);
+})(connect(null, {signInWithCallbacks})(LogInForm));

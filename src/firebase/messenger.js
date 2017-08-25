@@ -25,7 +25,7 @@ class FireMessenger {
       }
       this.builUpdatesForNewConversationMessage();
       return firebase.database().ref().update(this.updates);
-    });
+    }).catch(err => console.log(err));
   }
 
   buildUpdatesForNewMessage = () => {

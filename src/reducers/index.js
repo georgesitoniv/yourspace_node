@@ -6,8 +6,11 @@ import {
   conversationMembers, 
   userConversations
 } from './reducerUserConversations';
+import { authenticatedUser } from './reducerUser.js'; 
+import { USER_SIGN_OUT } from '../actions';
 
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
+  authenticatedUser,
   conversationMessages,
   currentConversation,
   conversationMembers,
@@ -15,4 +18,11 @@ const rootReducer = combineReducers({
   form: formReducer,
 });
 
-export default rootReducer;
+const rootReducer = (action, state) => {
+  if(action.type === USER_SIGN_OUT){
+    state = undefined;
+  }
+  return appReducer(state, action);
+}
+
+export default appReducer;

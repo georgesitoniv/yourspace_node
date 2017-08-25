@@ -20,7 +20,7 @@ describe('Fire Utils', () => {
   });
 
   it('should fetch users', (done) => {
-    fireUtils.fetchUsers('test').then(users => {
+    fireUtils.fetchUsers('test@test.com').then(users => {
       expect(users).toInclude(members['1']);
       done();
     }).catch(err => done(err));
